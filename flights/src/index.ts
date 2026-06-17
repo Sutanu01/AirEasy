@@ -5,7 +5,11 @@ import apiRoutes from './routes/index.js';
 
 const app = express();
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 app.use('/api', apiRoutes);
+
 
 const startServer = async () => {
   try {
@@ -15,7 +19,7 @@ const startServer = async () => {
     console.log('Database connection established successfully with Prisma.');
 
     app.listen(ServerConfig.SERVER_PORT, () => {
-      console.log(`Successfully started the server on PORT : ${ServerConfig.SERVER_PORT}`);
+      console.log(`Successfully started the server at http://localhost:${ServerConfig.SERVER_PORT}/api`);
     });
   } catch (error) {
     console.error('Unable to connect to database:', error);

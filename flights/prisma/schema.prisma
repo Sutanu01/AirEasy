@@ -6,16 +6,12 @@ datasource db {
   provider = "postgresql"
 }
 
-model Flight {
+model Airplane{
   id            Int      @id @default(autoincrement())
-  flightNumber  String   @unique
-  origin        String
-  destination   String
-  departureTime DateTime
-  arrivalTime   DateTime
-  status        String   @default("scheduled")
+  modelNumber   String   @default("")
+  capacity      Int      @default(0)
   createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  updatedAt     DateTime @default(now()) @updatedAt
 
-  @@map("flights")
+  @@map("airplanes")
 }
