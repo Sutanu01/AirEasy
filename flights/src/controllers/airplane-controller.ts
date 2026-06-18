@@ -1,8 +1,9 @@
 import { AirplaneService } from "../services/index.js";
-import { Request, Response } from "express";
+import { Request, Response, NextFunction } from "express";
 import { StatusCodes } from "http-status-codes";
+import { SuccessResponse } from "../utils/common/index.js";
 
-export async function createAirplane(req: Request, res: Response) {
+export async function createAirplane(req: Request, res: Response, next: NextFunction) {
   try {
     const { modelNumber, capacity } = req.body;
     const airplane = await AirplaneService.createAirplane({
@@ -10,18 +11,10 @@ export async function createAirplane(req: Request, res: Response) {
       capacity,
     });
 
-    return res.status(StatusCodes.CREATED).json({
-      success: true,
-      message: "Airplane created successfully",
-      data: airplane,
-      error: {},
-    });
-  } catch (error: any) {
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      success: false,
-      message: "Something went wrong while creating the airplane",
-      data: {},
-      error: error.message || error,
-    });
+    return res
+      .status(StatusCodes.CREATED)
+      .json(SuccessResponse("Successfully created the airplane", airplane));
+  } catch (error) {
+    next(error);
   }
 }

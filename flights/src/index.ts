@@ -2,6 +2,7 @@ import express from 'express';
 
 import { ServerConfig, prisma } from './config/index.js';
 import apiRoutes from './routes/index.js';
+import { errorHandler } from './middlewares/index.js';
 
 const app = express();
 
@@ -10,6 +11,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/api', apiRoutes);
 
+app.use(errorHandler);
 
 const startServer = async () => {
   try {

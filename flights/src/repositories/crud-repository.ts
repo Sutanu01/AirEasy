@@ -9,59 +9,35 @@ export default class CrudRepository<T, CreateInput = any, UniqueWhereInput = any
   }
 
   async create(data: CreateInput): Promise<T> {
-    try {
-      const response = await this.model.create({ data });
-      return response;
-    } catch (error) {
-      Logger.error("Something went wrong in the CRUD Repo : CREATE");
-      throw error;
-    }
+    const response = await this.model.create({ data });
+    return response;
   }
 
   async delete(id: string | number): Promise<T> {
-    try {
-      const response = await this.model.delete({
-        where: { id } as unknown as UniqueWhereInput,
-      });
-      return response;
-    } catch (error) {
-      Logger.error("Something went wrong in the CRUD Repo : DELETE");
-      throw error;
-    }
+    const response = await this.model.delete({
+      where: { id } as unknown as UniqueWhereInput,
+    });
+    return response;
   }
 
   async get(id: string | number): Promise<T | null> {
-    try {
-      const response = await this.model.findUnique({
-        where: { id } as unknown as UniqueWhereInput,
-      });
-      return response;
-    } catch (error) {
-      Logger.error("Something went wrong in the CRUD Repo : GET");
-      throw error;
-    }
+    const response = await this.model.findUnique({
+      where: { id } as unknown as UniqueWhereInput,
+    });
+    return response;
   }
 
   async getAll(args?: FindManyArgs): Promise<T[]> {
-    try {
-      const response = await this.model.findMany(args);
-      return response;
-    } catch (error) {
-      Logger.error("Something went wrong in the CRUD Repo : GET ALL");
-      throw error;
-    }
+    const response = await this.model.findMany(args);
+    return response;
   }
 
   async update(id : string | number, data : UpdateInput):Promise<T> {
-    try {
-      const response = await this.model.update({
-        where: { id } as unknown as UniqueWhereInput,
-        data
-      });
-      return response;
-    } catch (error) {
-      Logger.error("Something went wrong in the CRUD Repo : UPDATE");
-      throw error;
-    }
+
+    const response = await this.model.update({
+      where: { id } as unknown as UniqueWhereInput,
+      data
+    });
+    return response;
   }
 }
