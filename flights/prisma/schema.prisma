@@ -21,5 +21,21 @@ model City{
   cityName     String   @unique
   createdAt    DateTime @default(now())
   updatedAt    DateTime @default(now()) @updatedAt
+  airports     Airport[]
+
   @@map("cities")
+}
+
+model Airport{
+  id           Int      @id @default(autoincrement())
+  airportName  String   @unique
+  airportCode  String   @unique
+  address      String?
+  cityId       Int
+  city         City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+  
+  @@index([cityId])
+  @@map("airports")
 }
