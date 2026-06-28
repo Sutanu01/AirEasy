@@ -15,3 +15,11 @@ model Airplane{
 
   @@map("airplanes")
 }
+
+model City{
+  id           Int      @id @default(autoincrement())
+  cityName     String   @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @default(now()) @updatedAt
+  @@map("cities")
+}

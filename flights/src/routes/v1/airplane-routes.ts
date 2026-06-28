@@ -5,6 +5,26 @@ const router = Router();
 
 router.post("/",
     AirplaneMiddleware.validateCreateRequest,
-    AirplaneController.createAirplane);
+    AirplaneController.createAirplane
+);
 
+router.get("/",
+    AirplaneController.getAirplanes
+);
+
+router.get("/:id",
+    AirplaneMiddleware.validateGetRequest,
+    AirplaneController.getAirplane
+);
+
+router.delete("/:id",
+    AirplaneMiddleware.validateGetRequest,
+    AirplaneController.deleteAirplane
+);
+
+router.patch("/:id",
+    AirplaneMiddleware.validateGetRequest,
+    AirplaneMiddleware.validateUpdateRequest,
+    AirplaneController.updateAirplane
+);
 export default router;

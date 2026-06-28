@@ -1,5 +1,7 @@
-import { Logger } from "../config/index.js";
+import { AppError } from "../utils/errors/app-error.js";
 import type { CrudModel } from "./contracts/crud-model.js";
+import { StatusCodes } from "http-status-codes";
+
 
 export default class CrudRepository<T, CreateInput = any, UniqueWhereInput = any, FindManyArgs = any, UpdateInput = any> {
   protected model: CrudModel<T, CreateInput, UniqueWhereInput, FindManyArgs, UpdateInput>;
@@ -17,6 +19,9 @@ export default class CrudRepository<T, CreateInput = any, UniqueWhereInput = any
     const response = await this.model.delete({
       where: { id } as unknown as UniqueWhereInput,
     });
+    if (!response) {
+      throw new AppError("Not able to find the resource", StatusCodes.NOT_FOUND);
+    }
     return response;
   }
 
@@ -24,6 +29,9 @@ export default class CrudRepository<T, CreateInput = any, UniqueWhereInput = any
     const response = await this.model.findUnique({
       where: { id } as unknown as UniqueWhereInput,
     });
+    if (!response) {
+      throw new AppError("Not able to find the resource", StatusCodes.NOT_FOUND);
+    }
     return response;
   }
 
@@ -32,12 +40,15 @@ export default class CrudRepository<T, CreateInput = any, UniqueWhereInput = any
     return response;
   }
 
-  async update(id : string | number, data : UpdateInput):Promise<T> {
+  async update(id: string | number, data: UpdateInput): Promise<T> {
 
     const response = await this.model.update({
       where: { id } as unknown as UniqueWhereInput,
       data
     });
+    if (!response) {
+      throw new AppError("Not able to find the resource", StatusCodes.NOT_FOUND);
+    }
     return response;
   }
 }
