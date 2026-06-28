@@ -6,36 +6,66 @@ datasource db {
   provider = "postgresql"
 }
 
-model Airplane{
-  id            Int      @id @default(autoincrement())
-  modelNumber   String
-  capacity      Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @default(now()) @updatedAt
+model Airplane {
+  id          Int      @id @default(autoincrement())
+  modelNumber String
+  capacity    Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+  flights     Flight[]
 
   @@map("airplanes")
 }
 
-model City{
-  id           Int      @id @default(autoincrement())
-  cityName     String   @unique
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
-  airports     Airport[]
+model City {
+  id        Int       @id @default(autoincrement())
+  cityName  String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @default(now()) @updatedAt
+  airports  Airport[]
 
   @@map("cities")
 }
 
-model Airport{
-  id           Int      @id @default(autoincrement())
-  airportName  String   @unique
-  airportCode  String   @unique
-  address      String?
-  cityId       Int
-  city         City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @default(now()) @updatedAt
-  
+model Airport {
+  id          Int     @id @default(autoincrement())
+  airportName String  @unique
+  airportCode String  @unique
+  address     String?
+  cityId      Int
+
+  city             City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
+  departureFlights Flight[] @relation("Departure")
+  arrivalFlights   Flight[] @relation("Arrival")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
   @@index([cityId])
   @@map("airports")
+}
+
+model Flight {
+  id                 Int      @id @default(autoincrement())
+  flightNumber       String   @unique
+  airplaneId         Int
+  departureTime      DateTime
+  arrivalTime        DateTime
+  departureAirportId Int
+  arrivalAirportId   Int
+  price              Float
+  boardingGate       String?
+  availableSeats     Int
+
+  airplane         Airplane @relation(fields: [airplaneId], references: [id], onDelete: Cascade)
+  departureAirport Airport  @relation("Departure", fields: [departureAirportId], references: [id], onDelete: Cascade)
+  arrivalAirport   Airport  @relation("Arrival", fields: [arrivalAirportId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([departureAirportId])
+  @@index([arrivalAirportId])
+  @@index([airplaneId])
+  @@map("flights")
 }
