@@ -13,6 +13,7 @@ model Airplane {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
   flights     Flight[]
+  seats       Seat[]
 
   @@map("airplanes")
 }
@@ -68,4 +69,24 @@ model Flight {
   @@index([arrivalAirportId])
   @@index([airplaneId])
   @@map("flights")
+}
+
+enum SeatType {
+  FIRST_CLASS     @map("first_class")
+  BUSINESS        @map("business")
+  PREMIUM_ECONOMY @map("premium_economy")
+  ECONOMY         @map("economy")
+}
+
+model Seat {
+  id         Int      @id @default(autoincrement())
+  airplaneId Int
+  row        Int
+  column     String
+  seatType   SeatType @default(ECONOMY)
+
+  airplane Airplane @relation(fields: [airplaneId], references: [id], onDelete: Cascade)
+
+  @@index([airplaneId])
+  @@map("seats")
 }
