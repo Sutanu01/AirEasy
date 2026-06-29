@@ -1,0 +1,16 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
+node_modules/
+
+# TypeScript compiler output
+dist/
+*.tsbuildinfo
+
+# dotenv environment variable files
+.env
+.env.*
+!.env.example

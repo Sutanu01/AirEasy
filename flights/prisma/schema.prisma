@@ -61,6 +61,7 @@ model Flight {
   airplane         Airplane @relation(fields: [airplaneId], references: [id], onDelete: Cascade)
   departureAirport Airport  @relation("Departure", fields: [departureAirportId], references: [id], onDelete: Cascade)
   arrivalAirport   Airport  @relation("Arrival", fields: [arrivalAirportId], references: [id], onDelete: Cascade)
+  bookings         Booking[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
@@ -90,3 +91,28 @@ model Seat {
   @@index([airplaneId])
   @@map("seats")
 }
+
+enum BookingStatus {
+  PENDING    @map("pending")
+  BOOKED     @map("booked")
+  CANCELLED  @map("cancelled")
+}
+
+model Booking {
+  id        Int           @id @default(autoincrement())
+  flightId  Int
+  userId    Int
+  status    BookingStatus @default(PENDING)
+  noOfSeats Int
+  totalCost Int
+
+  flight Flight @relation(fields: [flightId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([flightId])
+  @@map("bookings")
+}
+
+
