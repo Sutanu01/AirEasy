@@ -142,3 +142,14 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# AI Agent / IDE folders
+.agents/
+.gemini/
+.kiro/
+.cursor/
+.windsurf/
+.cody/
+.idx/
+
+
