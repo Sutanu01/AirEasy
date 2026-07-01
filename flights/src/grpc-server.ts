@@ -110,6 +110,7 @@ export function startGrpcServer() {
   });
 
   const port = `0.0.0.0:${ServerConfig.GRPC_PORT}`;
+  // TODO (Production): Replace createInsecure() with secure SSL/TLS server credentials (createSsl()) and configure keepalive options.
   server.bindAsync(port, grpc.ServerCredentials.createInsecure(), (err, portNumber) => {
     if (err) {
       console.error('Failed to bind gRPC server:', err);

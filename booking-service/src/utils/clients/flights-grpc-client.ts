@@ -27,6 +27,8 @@ const packageDefinition = protoLoader.loadSync(PROTO_PATH, {
 
 const flightProto: any = grpc.loadPackageDefinition(packageDefinition).flight;
 
+// TODO (Production): Replace createInsecure() with secure SSL/TLS credentials (e.g., grpc.credentials.createSsl())
+// and migrate from dynamic protoLoader to statically generated code templates (ts-proto) for type safety.
 const client = new flightProto.FlightService(
   ServerConfig.FLIGHTS_GRPC_URL,
   grpc.credentials.createInsecure()
