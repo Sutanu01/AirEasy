@@ -29,18 +29,16 @@ model City {
 }
 
 model Airport {
-  id          Int     @id @default(autoincrement())
-  airportName String  @unique
-  airportCode String  @unique
-  address     String?
-  cityId      Int
-
+  id               Int      @id @default(autoincrement())
+  airportName      String   @unique
+  airportCode      String   @unique
+  address          String?
+  cityId           Int
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @default(now()) @updatedAt
   city             City     @relation(fields: [cityId], references: [id], onDelete: Cascade)
-  departureFlights Flight[] @relation("Departure")
   arrivalFlights   Flight[] @relation("Arrival")
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  departureFlights Flight[] @relation("Departure")
 
   @@index([cityId])
   @@map("airports")
@@ -57,26 +55,16 @@ model Flight {
   price              Float
   boardingGate       String?
   availableSeats     Int
-
-  airplane         Airplane @relation(fields: [airplaneId], references: [id], onDelete: Cascade)
-  departureAirport Airport  @relation("Departure", fields: [departureAirportId], references: [id], onDelete: Cascade)
-  arrivalAirport   Airport  @relation("Arrival", fields: [arrivalAirportId], references: [id], onDelete: Cascade)
-  bookings         Booking[]
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @default(now()) @updatedAt
+  airplane           Airplane @relation(fields: [airplaneId], references: [id], onDelete: Cascade)
+  arrivalAirport     Airport  @relation("Arrival", fields: [arrivalAirportId], references: [id], onDelete: Cascade)
+  departureAirport   Airport  @relation("Departure", fields: [departureAirportId], references: [id], onDelete: Cascade)
 
   @@index([departureAirportId])
   @@index([arrivalAirportId])
   @@index([airplaneId])
   @@map("flights")
-}
-
-enum SeatType {
-  FIRST_CLASS     @map("first_class")
-  BUSINESS        @map("business")
-  PREMIUM_ECONOMY @map("premium_economy")
-  ECONOMY         @map("economy")
 }
 
 model Seat {
@@ -85,34 +73,15 @@ model Seat {
   row        Int
   column     String
   seatType   SeatType @default(ECONOMY)
-
-  airplane Airplane @relation(fields: [airplaneId], references: [id], onDelete: Cascade)
+  airplane   Airplane @relation(fields: [airplaneId], references: [id], onDelete: Cascade)
 
   @@index([airplaneId])
   @@map("seats")
 }
 
-enum BookingStatus {
-  PENDING    @map("pending")
-  BOOKED     @map("booked")
-  CANCELLED  @map("cancelled")
+enum SeatType {
+  FIRST_CLASS     @map("first_class")
+  BUSINESS        @map("business")
+  PREMIUM_ECONOMY @map("premium_economy")
+  ECONOMY         @map("economy")
 }
-
-model Booking {
-  id        Int           @id @default(autoincrement())
-  flightId  Int
-  userId    Int
-  status    BookingStatus @default(PENDING)
-  noOfSeats Int
-  totalCost Int
-
-  flight Flight @relation(fields: [flightId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
-
-  @@index([flightId])
-  @@map("bookings")
-}
-
-
