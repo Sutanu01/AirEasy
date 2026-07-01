@@ -50,3 +50,17 @@ services:
       rabbitmq:
         condition: service_healthy
     restart: always
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./api-gateway/.env
+    depends_on:
+      flights-service:
+        condition: service_started
+      booking-service:
+        condition: service_started
+    restart: always
