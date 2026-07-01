@@ -1,6 +1,6 @@
 import FlightRepository from "../repositories/flight-repository.js";
 import AirplaneRepository from "../repositories/airplane-repository.js";
-import { Flight, Prisma } from "@prisma/client";
+import { Flight, Seat, Prisma } from "@prisma/client";
 import { AppError } from "../utils/errors/app-error.js";
 import { StatusCodes } from "http-status-codes";
 import DateTimeHelpers from "../utils/helpers/datetime-helpers.js";
@@ -108,9 +108,22 @@ async function updateSeats(flightId: number, seats: number, dec: boolean): Promi
   }
 }
 
+async function getFlightSeats(flightId: number): Promise<Seat[]> {
+  try {
+    const seats = await flightRepository.getFlightSeats(flightId);
+    return seats;
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error;
+    }
+    throw new AppError("Cannot fetch flight seats map", StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+}
+
 export {
   createFlight,
   getAllFlights,
   getFlight,
   updateSeats,
+  getFlightSeats,
 };

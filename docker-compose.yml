@@ -1,0 +1,52 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  flights-service:
+    build: ./flights
+    container_name: flights-service
+    ports:
+      - "3000:3000"
+      - "50051:50051"
+    env_file:
+      - ./flights/.env
+    extra_hosts:
+      - "ep-blue-scene-anp5c731-pooler.c-6.us-east-1.aws.neon.tech:100.51.95.243"
+    restart: always
+
+  booking-service:
+    build: ./booking-service
+    container_name: booking-service
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./booking-service/.env
+    extra_hosts:
+      - "ep-blue-scene-anp5c731-pooler.c-6.us-east-1.aws.neon.tech:100.51.95.243"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      flights-service:
+        condition: service_started
+    restart: always
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./notification-service/.env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: always

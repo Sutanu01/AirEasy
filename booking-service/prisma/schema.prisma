@@ -13,17 +13,39 @@ enum BookingStatus {
 }
 
 model Booking {
-  id        Int           @id @default(autoincrement())
-  flightId  Int
-  userId    Int
-  status    BookingStatus @default(PENDING)
-  noOfSeats Int
-  totalCost Int
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @default(now()) @updatedAt
+  id           Int           @id @default(autoincrement())
+  pnr          String        @unique
+  flightId     Int
+  userId       Int
+  status       BookingStatus @default(PENDING)
+  noOfSeats    Int
+  totalCost    Int
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now()) @updatedAt
+  bookingSeats BookingSeat[]
 
   @@index([flightId])
   @@map("bookings")
 }
+
+model BookingSeat {
+  id        Int     @id @default(autoincrement())
+  bookingId Int
+  seatId    Int
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@unique([bookingId, seatId])
+  @@map("booking_seats")
+}
+
+model IdempotencyKey {
+  id             String   @id @default(uuid())
+  key            String   @unique
+  responseStatus Int
+  responseBody   String
+  createdAt      DateTime @default(now())
+
+  @@map("idempotency_keys")
+}
+
 

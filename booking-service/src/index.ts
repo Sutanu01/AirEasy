@@ -3,6 +3,8 @@ import express from 'express';
 import { ServerConfig, prisma } from './config/index.js';
 import apiRoutes from './routes/index.js';
 import { errorHandler } from './middlewares/index.js';
+import { initializeQueue } from './config/queue.js';
+import { startBookingQueueConsumers } from './utils/queue/booking-queue-consumers.js';
 
 const app = express();
 
@@ -15,10 +17,12 @@ app.use(errorHandler);
 
 const startServer = async () => {
   try {
-    // Prisma uses a single client instance for the app, which keeps database access simple
-    // and avoids opening multiple connection pools while the server is running.
+
     await prisma.$connect();
     console.log('Database connection established successfully with Prisma (Booking Service).');
+
+    await initializeQueue();
+    await startBookingQueueConsumers();
 
     app.listen(ServerConfig.SERVER_PORT, () => {
       console.log(`Successfully started the Booking server at http://localhost:${ServerConfig.SERVER_PORT}/api`);
@@ -28,5 +32,7 @@ const startServer = async () => {
     process.exit(1);
   }
 };
+
+
 
 void startServer();

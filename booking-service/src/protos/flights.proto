@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package flight;
+
+service FlightService {
+  rpc GetFlight (FlightRequest) returns (FlightResponse);
+  rpc UpdateSeats (UpdateSeatsRequest) returns (FlightResponse);
+  rpc GetFlightSeats (FlightRequest) returns (SeatsResponse);
+}
+
+message FlightRequest {
+  int32 id = 1;
+}
+
+message FlightResponse {
+  int32 id = 1;
+  string flightNumber = 2;
+  int32 airplaneId = 3;
+  string departureTime = 4;
+  string arrivalTime = 5;
+  int32 departureAirportId = 6;
+  int32 arrivalAirportId = 7;
+  double price = 8;
+  string boardingGate = 9;
+  int32 availableSeats = 10;
+}
+
+message UpdateSeatsRequest {
+  int32 flightId = 1;
+  int32 seats = 2;
+  bool dec = 3;
+}
+
+message SeatInfo {
+  int32 id = 1;
+  int32 airplaneId = 2;
+  int32 row = 3;
+  string column = 4;
+  string seatType = 5;
+}
+
+message SeatsResponse {
+  repeated SeatInfo seats = 1;
+}

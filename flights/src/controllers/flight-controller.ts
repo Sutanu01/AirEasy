@@ -77,9 +77,23 @@ async function updateSeats(req: Request, res: Response, next: NextFunction) {
   }
 }
 
+async function getFlightSeats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const flightId = parseInt(req.params.id as string, 10);
+    const seats = await FlightService.getFlightSeats(flightId);
+    return res
+      .status(StatusCodes.OK)
+      .json(SuccessResponse("Successfully fetched physical seats map for the flight", seats));
+  } catch (error) {
+    next(error);
+  }
+}
+
 export {
   createFlight,
   getAllFlights,
   getFlight,
   updateSeats,
+  getFlightSeats,
 };
+

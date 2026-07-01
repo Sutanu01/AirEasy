@@ -1,1 +1,1 @@
-export * as BookingService from "./booking-service.js";
+export * as BookingService from './booking-service.js';

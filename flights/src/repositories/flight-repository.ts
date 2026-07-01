@@ -1,6 +1,6 @@
 import CrudRepository from "./crud-repository.js";
 import { prisma } from "../config/index.js";
-import type { Flight, Prisma } from "@prisma/client";
+import type { Flight, Seat, Prisma } from "@prisma/client";
 import { AppError } from "../utils/errors/app-error.js";
 import { StatusCodes } from "http-status-codes";
 
@@ -83,7 +83,7 @@ export default class FlightRepository extends CrudRepository<
     dec: boolean = true
   ): Promise<Flight> {
     const transaction = await prisma.$transaction(async (tx) => {
-      // 1. Fetch the flight first to verify it exists
+
       const flight = await tx.flight.findUnique({
         where: { id: flightId },
       });
@@ -147,4 +147,25 @@ export default class FlightRepository extends CrudRepository<
 
     return transaction;
   }
+
+  async getFlightSeats(flightId: number): Promise<Seat[]> {
+    const flight = await prisma.flight.findUnique({
+      where: { id: flightId },
+    });
+
+    if (!flight) {
+      throw new AppError("The flight you requested was not found", StatusCodes.NOT_FOUND);
+    }
+
+    const seats = await prisma.seat.findMany({
+      where: { airplaneId: flight.airplaneId },
+      orderBy: [
+        { row: "asc" },
+        { column: "asc" }
+      ]
+    });
+
+    return seats;
+  }
 }
+

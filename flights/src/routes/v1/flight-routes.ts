@@ -24,4 +24,10 @@ router.patch("/:id/seats",
   FlightController.updateSeats
 );
 
+router.get("/:id/seats",
+  FlightMiddleware.validateGetRequest,
+  FlightController.getFlightSeats
+);
+
 export default router;
+
