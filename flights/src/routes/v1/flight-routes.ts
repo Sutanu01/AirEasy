@@ -13,4 +13,15 @@ router.get("/",
   FlightController.getAllFlights
 );
 
+router.get("/:id",
+  FlightMiddleware.validateGetRequest,
+  FlightController.getFlight
+);
+
+router.patch("/:id/seats",
+  FlightMiddleware.validateGetRequest,
+  FlightMiddleware.validateUpdateSeatsRequest,
+  FlightController.updateSeats
+);
+
 export default router;

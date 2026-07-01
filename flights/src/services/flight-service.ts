@@ -74,8 +74,43 @@ async function getAllFlights(query: any): Promise<Flight[]> {
   }
 }
 
+async function getFlight(id: number): Promise<Flight> {
+  try {
+    const flight = await flightRepository.getFlight(id);
+    if (!flight) {
+      throw new AppError("The flight you requested was not found", StatusCodes.NOT_FOUND);
+    }
+    return flight;
+  } catch (error) {
+    if (error instanceof AppError && error.statusCode === StatusCodes.NOT_FOUND) {
+      throw new AppError("The flight you requested was not found", StatusCodes.NOT_FOUND);
+    }
+    if (error instanceof Prisma.PrismaClientValidationError) {
+      throw new AppError(error.message, StatusCodes.BAD_REQUEST);
+    }
+    throw new AppError("Cannot fetch the flight details", StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+}
+
+async function updateSeats(flightId: number, seats: number, dec: boolean): Promise<Flight> {
+  try {
+    const response = await flightRepository.updateRemainingSeats(flightId, seats, dec);
+    return response;
+  } catch (error) {
+    console.error("Error in updateSeats service:", error);
+    if (error instanceof AppError) {
+      throw error;
+    }
+    if (error instanceof Prisma.PrismaClientValidationError) {
+      throw new AppError(error.message, StatusCodes.BAD_REQUEST);
+    }
+    throw new AppError("Cannot update seats on the flight", StatusCodes.INTERNAL_SERVER_ERROR);
+  }
+}
 
 export {
   createFlight,
-  getAllFlights
+  getAllFlights,
+  getFlight,
+  updateSeats,
 };

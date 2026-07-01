@@ -51,7 +51,35 @@ async function getAllFlights(req: Request, res: Response, next: NextFunction) {
     next(error);
   }
 }
+
+async function getFlight(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = parseInt(req.params.id as string, 10);
+    const flight = await FlightService.getFlight(id);
+    return res
+      .status(StatusCodes.OK)
+      .json(SuccessResponse("Successfully fetched the flight", flight));
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function updateSeats(req: Request, res: Response, next: NextFunction) {
+  try {
+    const flightId = parseInt(req.params.id as string, 10);
+    const { seats, dec } = req.body;
+    const flight = await FlightService.updateSeats(flightId, seats, dec ?? true);
+    return res
+      .status(StatusCodes.OK)
+      .json(SuccessResponse("Successfully updated seats on the flight", flight));
+  } catch (error) {
+    next(error);
+  }
+}
+
 export {
   createFlight,
-  getAllFlights
+  getAllFlights,
+  getFlight,
+  updateSeats,
 };

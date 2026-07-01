@@ -81,3 +81,75 @@ export function validateCreateRequest(req: Request, res: Response, next: NextFun
   req.body = result.data;
   next();
 }
+
+const getFlightSchema = z.object({
+  id: z
+    .string()
+    .regex(/^\d+$/, "Flight ID must be a positive integer"),
+});
+
+export function validateGetRequest(req: Request, res: Response, next: NextFunction) {
+  const result = getFlightSchema.safeParse(req.params);
+  if (!result.success) {
+    const explanations = result.error.issues.map((issue) => issue.message);
+    return next(
+      new AppError(
+        "Something went wrong while fetching flight",
+        StatusCodes.BAD_REQUEST,
+        explanations
+      )
+    );
+  }
+
+  next();
+}
+
+const updateSeatsSchema = z.object({
+  seats: z
+    .preprocess(
+      (val) => {
+        if (typeof val === "string") {
+          const parsed = Number(val);
+          if (!isNaN(parsed)) return parsed;
+        }
+        return val;
+      },
+      z
+        .number({
+          message: "Seats must be a number",
+        })
+        .int("Seats must be an integer")
+        .gt(0, "Seats must be a positive integer")
+    ),
+  dec: z
+    .preprocess(
+      (val) => {
+        if (typeof val === "string") {
+          if (val.toLowerCase() === "true") return true;
+          if (val.toLowerCase() === "false") return false;
+        }
+        return val;
+      },
+      z.boolean({
+        message: "dec must be a boolean value",
+      })
+    )
+    .optional(),
+});
+
+export function validateUpdateSeatsRequest(req: Request, res: Response, next: NextFunction) {
+  const result = updateSeatsSchema.safeParse(req.body);
+  if (!result.success) {
+    const explanations = result.error.issues.map((issue) => issue.message);
+    return next(
+      new AppError(
+        "Something went wrong while updating flight seats",
+        StatusCodes.BAD_REQUEST,
+        explanations
+      )
+    );
+  }
+
+  req.body = result.data;
+  next();
+}
