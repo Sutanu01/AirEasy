@@ -2,8 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { ErrorResponse } from '../utils/common/index.js';
 import { AppError } from '../utils/errors/app-error.js';
+import { Logger } from '../config/index.js';
 
 function errorHandler(err: any, req: Request, res: Response, next: NextFunction) {
+  Logger.error(err.stack || err.message || err);
+
   if (err instanceof AppError) {
     return res
       .status(err.statusCode)

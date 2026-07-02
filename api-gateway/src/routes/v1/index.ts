@@ -1,8 +1,13 @@
 import express from 'express';
-import { info } from '../../controllers/index.js';
+
+import { InfoController } from '../../controllers/index.js';
+import authRoutes from './auth-routes.js';
 
 const router = express.Router();
 
-router.get('/info', info);
+router.get("/info", InfoController.info);
+
+router.use("/auth", authRoutes);
+
 
 export default router;

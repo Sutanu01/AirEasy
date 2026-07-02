@@ -1,3 +1,4 @@
-import { info } from './info-controller.js';
+import * as InfoController from './info-controller.js';
+import * as AuthController from './auth-controller.js';
 
-export { info };
+export { InfoController, AuthController };

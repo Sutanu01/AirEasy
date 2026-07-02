@@ -58,6 +58,8 @@ services:
       - "8000:8000"
     env_file:
       - ./api-gateway/.env
+    extra_hosts:
+      - "ep-blue-scene-anp5c731-pooler.c-6.us-east-1.aws.neon.tech:100.51.95.243"
     depends_on:
       flights-service:
         condition: service_started
