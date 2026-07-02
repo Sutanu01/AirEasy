@@ -27,12 +27,13 @@ async function makePayment(req: Request, res: Response, next: NextFunction) {
   try {
     const { bookingId } = req.body;
     const idempotencyKey = req.headers['x-idempotency-key'];
+    const userEmail = req.headers['x-user-email'] as string | undefined;
 
     if (!idempotencyKey || typeof idempotencyKey !== 'string') {
       throw new AppError('Idempotency key header is required', StatusCodes.BAD_REQUEST);
     }
 
-    const result = await BookingService.makePayment(Number(bookingId), idempotencyKey);
+    const result = await BookingService.makePayment(Number(bookingId), idempotencyKey, userEmail);
 
     return res
       .status(result.status)

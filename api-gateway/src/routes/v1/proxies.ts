@@ -17,8 +17,12 @@ export const bookingServiceProxy = createProxyMiddleware({
   on: {
     proxyReq: (proxyReq: any, req: any, res: any) => {
 
-      if (req.body && (req as any).user) {
-        req.body.userId = (req as any).user.userId;
+      if ((req as any).user) {
+        proxyReq.setHeader('x-user-id', String((req as any).user.userId));
+        proxyReq.setHeader('x-user-email', String((req as any).user.email));
+        if (req.body) {
+          req.body.userId = (req as any).user.userId;
+        }
       }
       fixRequestBody(proxyReq, req);
     },

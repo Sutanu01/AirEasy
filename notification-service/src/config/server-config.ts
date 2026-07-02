@@ -8,6 +8,8 @@ const parsedPort = rawPort ? Number.parseInt(rawPort, 10) : NaN;
 const ServerConfig = {
   SERVER_PORT: Number.isNaN(parsedPort) ? 5000 : parsedPort,
   RABBITMQ_URL: process.env.RABBITMQ_URL || 'amqp://localhost',
+  RESEND_API_KEY: process.env.RESEND_API_KEY || '',
+  SENDER_EMAIL: process.env.SENDER_EMAIL || 'onboarding@resend.dev',
 };
 
 export default ServerConfig;

@@ -101,7 +101,7 @@ async function createBooking(data: CreateBookingInput): Promise<Booking> {
 }
 
 
-async function makePayment(bookingId: number, idempotencyKey: string): Promise<any> {
+async function makePayment(bookingId: number, idempotencyKey: string, recipientEmail?: string): Promise<any> {
   const existingKey = await prisma.idempotencyKey.findUnique({
     where: { key: idempotencyKey }
   });
@@ -142,7 +142,8 @@ async function makePayment(bookingId: number, idempotencyKey: string): Promise<a
     flightId: updatedBooking.flightId,
     userId: updatedBooking.userId,
     totalCost: updatedBooking.totalCost,
-    noOfSeats: updatedBooking.noOfSeats
+    noOfSeats: updatedBooking.noOfSeats,
+    recipientEmail: recipientEmail || 'sutanuj11@gmail.com'
   });
 
   channel.sendToQueue(NOTIFICATION_QUEUE_NAME, Buffer.from(notificationPayload), { persistent: true });
