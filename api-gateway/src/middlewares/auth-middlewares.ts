@@ -75,8 +75,8 @@ export async function isAuthenticated(req: Request, res: Response, next: NextFun
 }
 
 export const authRateLimiter = rateLimit({
-  windowMs: ServerConfig.RATE_LIMIT_WINDOW_MS,
-  max: ServerConfig.RATE_LIMIT_MAX_REQUESTS,
+  windowMs: ServerConfig.AUTH_RATE_LIMIT_WINDOW_MS,
+  max: ServerConfig.AUTH_RATE_LIMIT_MAX_REQUESTS,
   handler: (req: Request, res: Response, next: NextFunction) => {
     next(new AppError('Too many login or signup attempts. Please try again later.', StatusCodes.TOO_MANY_REQUESTS));
   },

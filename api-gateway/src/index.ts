@@ -3,7 +3,7 @@ import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import { ServerConfig, Logger } from './config/index.js';
 import apiRoutes from './routes/index.js';
-import { errorHandler } from './middlewares/index.js';
+import { errorHandler, globalRateLimiter } from './middlewares/index.js';
 
 const app = express();
 
@@ -11,6 +11,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 app.use(cookieParser());
+app.use(globalRateLimiter);
 
 app.use('/api', apiRoutes);
 app.use(errorHandler);
