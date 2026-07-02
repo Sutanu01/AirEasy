@@ -4,6 +4,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+ENV DATABASE_URL=postgresql://dummy:dummy@localhost:5432/dummy
+RUN npx prisma generate
 RUN npm run build
 
 # Runtime Stage
@@ -13,6 +15,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --omit=dev
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+RUN npx prisma generate
 
 EXPOSE 8000
 
