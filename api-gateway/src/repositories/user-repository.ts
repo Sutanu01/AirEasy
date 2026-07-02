@@ -13,9 +13,29 @@ export default class UserRepository extends CrudRepository<
     super(prisma.user);
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string) {
     return await prisma.user.findUnique({
       where: { email },
+      include: {
+        userRoles: {
+          include: {
+            role: true
+          }
+        }
+      }
+    });
+  }
+
+  async get(id: string | number) {
+    return await prisma.user.findUnique({
+      where: { id: Number(id) },
+      include: {
+        userRoles: {
+          include: {
+            role: true
+          }
+        }
+      }
     });
   }
 

@@ -66,12 +66,27 @@ export async function isAuthenticated(req: Request, res: Response, next: NextFun
 
     (req as any).user = {
       userId: user.id,
-      email: user.email
+      email: user.email,
+      roles: payload.roles || []
     };
     next();
   } catch (error) {
     next(error);
   }
+}
+
+export function checkRole(allowedRoles: string[]) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const user = (req as any).user;
+    if (!user || !user.roles) {
+      throw new AppError('Unauthorized access: User details missing', StatusCodes.UNAUTHORIZED);
+    }
+    const hasRole = user.roles.some((role: string) => allowedRoles.includes(role));
+    if (!hasRole) {
+      throw new AppError('Forbidden: You do not have the required permissions', StatusCodes.FORBIDDEN);
+    }
+    next();
+  };
 }
 
 export const authRateLimiter = rateLimit({

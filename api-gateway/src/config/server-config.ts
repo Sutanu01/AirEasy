@@ -15,5 +15,7 @@ export default {
   REFRESH_TOKEN_COOKIE_SAMESITE: (process.env.REFRESH_TOKEN_COOKIE_SAMESITE || 'lax') as 'lax' | 'none' | 'strict',
   REFRESH_TOKEN_COOKIE_PATH: process.env.REFRESH_TOKEN_COOKIE_PATH || '/api/v1/auth',
   GLOBAL_RATE_LIMIT_WINDOW_MS: parseInt(process.env.GLOBAL_RATE_LIMIT_WINDOW_MS || '60000', 10),
-  GLOBAL_RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.GLOBAL_RATE_LIMIT_MAX_REQUESTS || '100', 10)
+  GLOBAL_RATE_LIMIT_MAX_REQUESTS: parseInt(process.env.GLOBAL_RATE_LIMIT_MAX_REQUESTS || '100', 10),
+  FLIGHTS_SERVICE_URL: process.env.FLIGHTS_SERVICE_URL || 'http://localhost:3000',
+  BOOKING_SERVICE_URL: process.env.BOOKING_SERVICE_URL || 'http://localhost:4000'
 };

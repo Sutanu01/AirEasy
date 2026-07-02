@@ -4,6 +4,7 @@ import { ServerConfig } from '../../config/index.js';
 interface TokenPayload {
   userId: number;
   tokenVersion: number;
+  roles?: string[];
 }
 
 export function generateAccessToken(payload: TokenPayload): string {

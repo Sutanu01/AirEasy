@@ -14,9 +14,9 @@ services:
   flights-service:
     build: ./flights
     container_name: flights-service
-    ports:
-      - "3000:3000"
-      - "50051:50051"
+    expose:
+      - "3000"
+      - "50051"
     env_file:
       - ./flights/.env
     extra_hosts:
@@ -26,8 +26,8 @@ services:
   booking-service:
     build: ./booking-service
     container_name: booking-service
-    ports:
-      - "4000:4000"
+    expose:
+      - "4000"
     env_file:
       - ./booking-service/.env
     extra_hosts:
