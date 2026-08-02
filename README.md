@@ -41,6 +41,44 @@ The system implements clean microservices design patterns, focusing on security,
 
 ---
 
+## Service Technology Stacks
+
+Each microservice within the system architecture utilizes a dedicated technology stack tailored to its domain-specific responsibilities:
+
+### 1. API Gateway (`api-gateway`)
+* **Network Boundary**: Port `8000` (Public Entrypoint)
+* **Runtime & Language**: Node.js, TypeScript
+* **Routing & Proxy**: Express.js, `http-proxy-middleware`
+* **Security & Authentication**: JWT (`jsonwebtoken`), Password Hashing (`bcrypt`), Rate Limiting (`express-rate-limit`), CORS, Cookie Parser
+* **Data Access**: PostgreSQL, Prisma ORM (`@prisma/client`, `@prisma/adapter-pg`)
+* **Validation & Logging**: Zod, Winston
+
+### 2. Flights Service (`flights`)
+* **Network Boundary**: Port `3000` (REST) / Port `50051` (gRPC Internal)
+* **Runtime & Language**: Node.js, TypeScript
+* **API & RPC Layer**: Express.js (REST API), gRPC Server (`@grpc/grpc-js`, `@grpc/proto-loader`)
+* **Data Access**: PostgreSQL, Prisma ORM (`@prisma/client`, `@prisma/adapter-pg`)
+* **Validation & Logging**: Zod, Winston, Axios
+
+### 3. Booking Service (`booking-service`)
+* **Network Boundary**: Port `4000` (Internal Network Exposure)
+* **Runtime & Language**: Node.js, TypeScript
+* **API & RPC Layer**: Express.js (REST API), gRPC Client (Inter-service queries to Flights Service)
+* **Asynchronous Messaging**: RabbitMQ Producer (`amqplib`) for seat confirmation event publishing
+* **Scheduled Operations**: Node-Cron (`node-cron`) for automated booking status and reservation cleanup
+* **Data Access**: PostgreSQL, Prisma ORM (`@prisma/client`, `@prisma/adapter-pg`)
+* **Validation & Logging**: Zod, Winston, Axios
+
+### 4. Notification Service (`notification-service`)
+* **Network Boundary**: Port `5000` (Internal Network Exposure)
+* **Runtime & Language**: Node.js, TypeScript
+* **API Framework**: Express.js
+* **Asynchronous Messaging**: RabbitMQ Consumer (`amqplib`) for event queue consumption
+* **Email Dispatching**: Resend API SDK (`resend`), Nodemailer (`nodemailer`)
+* **Logging**: Winston
+
+---
+
 ## Local Execution Guide
 
 Follow these instructions to run the microservices stack on your local machine using Docker Compose.
