@@ -64,8 +64,8 @@ Each microservice within the system architecture utilizes a dedicated technology
 * **Network Boundary**: Port `4000` (Internal Network Exposure)
 * **Runtime & Language**: Node.js, TypeScript
 * **API & RPC Layer**: Express.js (REST API), gRPC Client (Inter-service queries to Flights Service)
-* **Asynchronous Messaging**: RabbitMQ Producer (`amqplib`) for seat confirmation event publishing
-* **Scheduled Operations**: Node-Cron (`node-cron`) for automated booking status and reservation cleanup
+* **Asynchronous Messaging**: RabbitMQ Producer (`amqplib`) for seat confirmation event publishing and TTL-based hold expiration
+* **Expiration & Cleanup**: RabbitMQ Message TTL (`x-message-ttl`) & Dead Letter Exchange (DLQ) for automated reservation hold expiration and seat release cleanup
 * **Data Access**: PostgreSQL, Prisma ORM (`@prisma/client`, `@prisma/adapter-pg`)
 * **Validation & Logging**: Zod, Winston, Axios
 
