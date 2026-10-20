@@ -31,6 +31,15 @@ const paymentSchema = z.object({
     .number()
     .int('bookingId must be an integer')
     .positive('bookingId must be positive'),
+  razorpayPaymentId: z.string().optional(),
+  razorpaySignature: z.string().optional(),
+});
+
+const createOrderSchema = z.object({
+  bookingId: z
+    .number()
+    .int('bookingId must be an integer')
+    .positive('bookingId must be positive'),
 });
 
 function validateCreateRequest(req: Request, res: Response, next: NextFunction) {
@@ -56,6 +65,23 @@ function validateCreateRequest(req: Request, res: Response, next: NextFunction) 
   next();
 }
 
+function validateCreateOrderRequest(req: Request, res: Response, next: NextFunction) {
+  const data = {
+    bookingId: req.body.bookingId !== undefined ? Number(req.body.bookingId) : undefined,
+  };
+
+  const validation = createOrderSchema.safeParse(data);
+
+  if (!validation.success) {
+    const explanations = validation.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`);
+    throw new AppError('Invalid create order request data', StatusCodes.BAD_REQUEST, explanations);
+  }
+
+  req.body.bookingId = data.bookingId;
+
+  next();
+}
+
 function validatePaymentRequest(req: Request, res: Response, next: NextFunction) {
 
   const idempotencyKey = req.headers['x-idempotency-key'];
@@ -66,6 +92,8 @@ function validatePaymentRequest(req: Request, res: Response, next: NextFunction)
 
   const data = {
     bookingId: req.body.bookingId !== undefined ? Number(req.body.bookingId) : undefined,
+    razorpayPaymentId: req.body.razorpayPaymentId,
+    razorpaySignature: req.body.razorpaySignature,
   };
 
   const validation = paymentSchema.safeParse(data);
@@ -76,11 +104,14 @@ function validatePaymentRequest(req: Request, res: Response, next: NextFunction)
   }
 
   req.body.bookingId = data.bookingId;
+  req.body.razorpayPaymentId = data.razorpayPaymentId;
+  req.body.razorpaySignature = data.razorpaySignature;
   
   next();
 }
 
 export {
   validateCreateRequest,
+  validateCreateOrderRequest,
   validatePaymentRequest,
 };

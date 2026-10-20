@@ -1,9 +1,10 @@
+import crypto from 'crypto';
 import BookingRepository from "../repositories/booking-repository.js";
 import { Booking, BookingStatus, Prisma } from "@prisma/client";
 import { AppError } from "../utils/errors/app-error.js";
 import { StatusCodes } from "http-status-codes";
 import { flightsGrpcClient } from "../utils/clients/flights-grpc-client.js";
-import { prisma } from "../config/index.js";
+import { prisma, razorpay, ServerConfig } from "../config/index.js";
 import { channel, HOLD_TTL_QUEUE_NAME, NOTIFICATION_QUEUE_NAME } from "../config/queue.js";
 import { generateRandomPNR } from "../utils/helpers/pnr-generator.js";
 
@@ -14,6 +15,14 @@ interface CreateBookingInput {
   userId: number;
   noOfSeats: number;
   seatIds: number[];
+}
+
+interface PaymentInput {
+  bookingId: number;
+  idempotencyKey: string;
+  recipientEmail?: string;
+  razorpayPaymentId?: string;
+  razorpaySignature?: string;
 }
 
 async function createBooking(data: CreateBookingInput): Promise<Booking> {
@@ -100,8 +109,73 @@ async function createBooking(data: CreateBookingInput): Promise<Booking> {
   }
 }
 
+async function createPaymentOrder(bookingId: number, userId?: number): Promise<{
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  booking: Booking;
+}> {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId }
+  });
 
-async function makePayment(bookingId: number, idempotencyKey: string, recipientEmail?: string): Promise<any> {
+  if (!booking) {
+    throw new AppError("The booking does not exist", StatusCodes.NOT_FOUND);
+  }
+
+  if (userId && booking.userId !== userId) {
+    throw new AppError("Unauthorized access to this booking", StatusCodes.FORBIDDEN);
+  }
+
+  if (booking.status === BookingStatus.CANCELLED) {
+    throw new AppError("Cannot pay for a cancelled booking", StatusCodes.BAD_REQUEST);
+  }
+
+  if (booking.status === BookingStatus.BOOKED) {
+    throw new AppError("Booking is already paid and confirmed", StatusCodes.BAD_REQUEST);
+  }
+
+  if (booking.razorpayOrderId) {
+    return {
+      orderId: booking.razorpayOrderId,
+      amount: booking.totalCost * 100,
+      currency: 'INR',
+      keyId: ServerConfig.RAZORPAY_KEY_ID,
+      booking
+    };
+  }
+
+  const order = await razorpay.orders.create({
+    amount: booking.totalCost * 100,
+    currency: 'INR',
+    receipt: `rcpt_${booking.pnr}_${booking.id}`.slice(0, 40),
+    notes: {
+      bookingId: String(booking.id),
+      pnr: booking.pnr,
+      flightId: String(booking.flightId),
+    }
+  });
+
+  const updatedBooking = await prisma.booking.update({
+    where: { id: bookingId },
+    data: {
+      razorpayOrderId: order.id
+    }
+  });
+
+  return {
+    orderId: order.id,
+    amount: Number(order.amount),
+    currency: order.currency,
+    keyId: ServerConfig.RAZORPAY_KEY_ID,
+    booking: updatedBooking
+  };
+}
+
+async function makePayment(input: PaymentInput): Promise<any> {
+  const { bookingId, idempotencyKey, recipientEmail, razorpayPaymentId, razorpaySignature } = input;
+
   const existingKey = await prisma.idempotencyKey.findUnique({
     where: { key: idempotencyKey }
   });
@@ -123,16 +197,41 @@ async function makePayment(bookingId: number, idempotencyKey: string, recipientE
     throw new AppError("Cannot pay for a cancelled booking", StatusCodes.BAD_REQUEST);
   }
 
-  const paymentSuccessful = true; // Simulated success
+  if (booking.status === BookingStatus.BOOKED) {
+    return {
+      status: StatusCodes.OK,
+      data: {
+        message: "Booking is already confirmed",
+        booking
+      },
+      cached: false
+    };
+  }
 
-  if (!paymentSuccessful) {
-    throw new AppError("Payment transaction was declined by bank", StatusCodes.PAYMENT_REQUIRED);
+  // If Razorpay payment details are provided, verify the HMAC signature
+  if (razorpayPaymentId && razorpaySignature) {
+    if (!booking.razorpayOrderId) {
+      throw new AppError("No Razorpay order found for this booking. Please initiate checkout first.", StatusCodes.BAD_REQUEST);
+    }
+
+    const expectedSignature = crypto
+      .createHmac('sha256', ServerConfig.RAZORPAY_KEY_SECRET)
+      .update(`${booking.razorpayOrderId}|${razorpayPaymentId}`)
+      .digest('hex');
+
+    if (expectedSignature !== razorpaySignature) {
+      throw new AppError("Payment verification failed: Invalid Razorpay signature", StatusCodes.BAD_REQUEST);
+    }
   }
 
   const updatedBooking = await prisma.$transaction(async (tx) => {
     return await tx.booking.update({
       where: { id: bookingId },
-      data: { status: BookingStatus.BOOKED }
+      data: {
+        status: BookingStatus.BOOKED,
+        ...(razorpayPaymentId ? { razorpayPaymentId } : {}),
+        ...(razorpaySignature ? { razorpaySignature } : {})
+      }
     });
   });
 
@@ -147,8 +246,6 @@ async function makePayment(bookingId: number, idempotencyKey: string, recipientE
   });
 
   channel.sendToQueue(NOTIFICATION_QUEUE_NAME, Buffer.from(notificationPayload), { persistent: true });
-
-
 
   const responseData = {
     message: "Payment successfully processed, seats confirmed",
@@ -170,9 +267,69 @@ async function makePayment(bookingId: number, idempotencyKey: string, recipientE
   };
 }
 
+async function getUserBookings(userId: number): Promise<any[]> {
+  return await prisma.booking.findMany({
+    where: { userId },
+    include: {
+      bookingSeats: true,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+}
+
+async function getBookingById(bookingId: number, userId?: number): Promise<any> {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId },
+    include: {
+      bookingSeats: true,
+    },
+  });
+
+  if (!booking) {
+    throw new AppError("The booking does not exist", StatusCodes.NOT_FOUND);
+  }
+
+  if (userId && booking.userId !== userId) {
+    throw new AppError("Unauthorized access to this booking", StatusCodes.FORBIDDEN);
+  }
+
+  return booking;
+}
+
+async function cancelBooking(bookingId: number, userId?: number): Promise<any> {
+  const booking = await prisma.booking.findUnique({
+    where: { id: bookingId }
+  });
+
+  if (!booking) {
+    throw new AppError("The booking does not exist", StatusCodes.NOT_FOUND);
+  }
+
+  if (userId && booking.userId !== userId) {
+    throw new AppError("Unauthorized to cancel this booking", StatusCodes.FORBIDDEN);
+  }
+
+  if (booking.status === BookingStatus.CANCELLED) {
+    return booking;
+  }
+
+  const updatedBooking = await prisma.booking.update({
+    where: { id: bookingId },
+    data: { status: BookingStatus.CANCELLED }
+  });
+
+  try {
+    await flightsGrpcClient.updateSeats(booking.flightId, booking.noOfSeats, false);
+  } catch (error: any) {
+    // continue if seat update fails
+  }
+
+  return updatedBooking;
+}
 
 async function getFlightSeatsMap(flightId: number): Promise<any[]> {
-
   const physicalSeats = await flightsGrpcClient.getFlightSeats(flightId);
 
   const activeBookingSeats = await prisma.bookingSeat.findMany({
@@ -199,6 +356,10 @@ async function getFlightSeatsMap(flightId: number): Promise<any[]> {
 
 export {
   createBooking,
+  createPaymentOrder,
   makePayment,
+  getUserBookings,
+  getBookingById,
+  cancelBooking,
   getFlightSeatsMap
 };

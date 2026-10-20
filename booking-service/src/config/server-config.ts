@@ -14,6 +14,8 @@ const ServerConfig = {
   FLIGHTS_GRPC_URL: process.env.FLIGHTS_GRPC_URL || 'localhost:50051',
   RABBITMQ_URL: process.env.RABBITMQ_URL || 'amqp://localhost',
   BOOKING_HOLD_TTL_MS: Number.isNaN(parsedHoldTtl) ? 1200000 : parsedHoldTtl,
+  RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || '',
+  RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET || '',
 };
 
 export default ServerConfig;

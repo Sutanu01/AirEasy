@@ -1,23 +1,25 @@
-# Airline Reservation Microservices System
+# AirEasy — Airline Reservation System
 
-A professional-grade flight booking and transaction processing system built using a hardened microservices architecture. 
+A flight booking and transaction processing system built on a  microservices architecture with a modern web frontend.
 
-The system leverages an API Gateway for request routing and stateless security enforcement, uses RabbitMQ for asynchronous event-driven task processing, and integrates with the Resend API to handle transaction email dispatching.
+The backend leverages an API Gateway for request routing and stateless security enforcement, uses RabbitMQ for asynchronous event-driven task processing, and integrates with the Resend API for transactional email dispatching. The frontend provides an intuitive booking experience with live seat selection and Razorpay payment integration.
+
+<img src="assets/landing.png" alt="AirEasy Landing Page" width="100%" />
 
 ---
 
 ## System Architecture
 
-The following diagram illustrates the network boundary topology, proxy routing, and the asynchronous event pipeline:
-
 ```mermaid
 graph TD
-    Client[Client / External API User] -->|HTTP Requests| Gateway[API Gateway Port 8000]
-    
+    Client[Client / Browser] -->|HTTP Requests| Gateway[API Gateway Port 8000]
+    Client -->|Next.js| Frontend[Frontend Port 3001]
+    Frontend -->|API Calls| Gateway
+
     subgraph Private VPC Network Boundaries
         Gateway -->|HTTP + Context Headers| Flights[Flights Service Port 3000]
         Gateway -->|HTTP + Context Headers| Booking[Booking Service Port 4000]
-        
+
         Booking -->|Queue Confirmations| Broker[RabbitMQ Broker]
         Broker -->|Consume Events| Notification[Notification Service Port 5000]
     end
@@ -30,8 +32,6 @@ graph TD
 
 ## Architectural Coverage
 
-The system implements clean microservices design patterns, focusing on security, network isolation, and loose coupling:
-
 1. **Centralized Edge Proxy**: The API Gateway acts as the single entry point. It handles centralized JWT validation, evaluates user roles, and forwards requests to target services.
 2. **Stateless Role-Based Access Control (RBAC)**: Supports roles including ADMIN, CUSTOMER, and FLIGHT_COMPANY. Role permissions are checked statelessly at the Gateway level using JWT claims.
 3. **Network Boundary Hardening**: Microservices are configured using Docker internal exposure (`expose` rather than `ports`). This blocks external direct host access to port 3000 and port 4000, forcing all client requests through the Gateway.
@@ -41,50 +41,32 @@ The system implements clean microservices design patterns, focusing on security,
 
 ---
 
-## Service Technology Stacks
+## Technology Stack
 
-Each microservice within the system architecture utilizes a dedicated technology stack tailored to its domain-specific responsibilities:
+### Backend Microservices
 
-### 1. API Gateway (`api-gateway`)
-* **Network Boundary**: Port `8000` (Public Entrypoint)
-* **Runtime & Language**: Node.js, TypeScript
-* **Routing & Proxy**: Express.js, `http-proxy-middleware`
-* **Security & Authentication**: JWT (`jsonwebtoken`), Password Hashing (`bcrypt`), Rate Limiting (`express-rate-limit`), CORS, Cookie Parser
-* **Data Access**: PostgreSQL, Prisma ORM (`@prisma/client`, `@prisma/adapter-pg`)
-* **Validation & Logging**: Zod, Winston
+| Service | Port | Core Stack |
+|---------|------|------------|
+| API Gateway | 8000 (Public) | Node.js, TypeScript, Express.js, JWT, Prisma, PostgreSQL |
+| Flights Service | 3000 / 50051 (gRPC) | Node.js, TypeScript, Express.js, gRPC, Prisma, PostgreSQL |
+| Booking Service | 4000 (Internal) | Node.js, TypeScript, Express.js, gRPC Client, RabbitMQ, Prisma, PostgreSQL |
+| Notification Service | 5000 (Internal) | Node.js, TypeScript, Express.js, RabbitMQ Consumer, Resend API |
 
-### 2. Flights Service (`flights`)
-* **Network Boundary**: Port `3000` (REST) / Port `50051` (gRPC Internal)
-* **Runtime & Language**: Node.js, TypeScript
-* **API & RPC Layer**: Express.js (REST API), gRPC Server (`@grpc/grpc-js`, `@grpc/proto-loader`)
-* **Data Access**: PostgreSQL, Prisma ORM (`@prisma/client`, `@prisma/adapter-pg`)
-* **Validation & Logging**: Zod, Winston, Axios
+### Frontend
 
-### 3. Booking Service (`booking-service`)
-* **Network Boundary**: Port `4000` (Internal Network Exposure)
-* **Runtime & Language**: Node.js, TypeScript
-* **API & RPC Layer**: Express.js (REST API), gRPC Client (Inter-service queries to Flights Service)
-* **Asynchronous Messaging**: RabbitMQ Producer (`amqplib`) for seat confirmation event publishing and TTL-based hold expiration
-* **Expiration & Cleanup**: RabbitMQ Message TTL (`x-message-ttl`) & Dead Letter Exchange (DLQ) for automated reservation hold expiration and seat release cleanup
-* **Data Access**: PostgreSQL, Prisma ORM (`@prisma/client`, `@prisma/adapter-pg`)
-* **Validation & Logging**: Zod, Winston, Axios
-
-### 4. Notification Service (`notification-service`)
-* **Network Boundary**: Port `5000` (Internal Network Exposure)
-* **Runtime & Language**: Node.js, TypeScript
-* **API Framework**: Express.js
-* **Asynchronous Messaging**: RabbitMQ Consumer (`amqplib`) for event queue consumption
-* **Email Dispatching**: Resend API SDK (`resend`), Nodemailer (`nodemailer`)
-* **Logging**: Winston
+| Component | Stack |
+|-----------|-------|
+| Framework | Next.js 16, React 19, TypeScript |
+| Payments | Razorpay Sandbox Integration |
+| UI | Custom component library, Lucide Icons |
 
 ---
 
 ## Local Execution Guide
 
-Follow these instructions to run the microservices stack on your local machine using Docker Compose.
-
 ### Prerequisites
 * Docker Desktop installed and running.
+* Node.js 18+ (for the frontend).
 
 ### Execution Steps
 
@@ -101,15 +83,23 @@ Follow these instructions to run the microservices stack on your local machine u
    SENDER_EMAIL=onboarding@resend.dev
    ```
 
-3. **Build and Start Container Services**:
+3. **Build and Start Backend Services**:
    From the repository root folder, run:
    ```bash
    docker-compose up --build -d
    ```
    This will build the Node.js/TypeScript stack, execute database migrations, seed standard database roles, start RabbitMQ, and launch the service containers internally.
 
-4. **Health Check**:
-   Confirm the stack is active by sending a request to the Gateway health endpoint:
+4. **Start the Frontend**:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   The frontend will be available at `http://localhost:3001`.
+
+5. **Health Check**:
+   Confirm the backend stack is active by sending a request to the Gateway health endpoint:
    ```bash
    curl http://localhost:8000/api/v1/info
    ```
@@ -118,10 +108,8 @@ Follow these instructions to run the microservices stack on your local machine u
 
 ## Production Deployment Specifications
 
-When deploying the microservices stack to staging or production environments, implement the following changes:
-
 ### 1. Zero-Trust VPC Network
-* Keep microservice port exposures blocked from the public internet. 
+* Keep microservice port exposures blocked from the public internet.
 * Run all microservices on private subnets. Only the API Gateway should be reachable via an external Application Load Balancer (ALB).
 * Downstream services trust `x-user-id` and `x-user-email` headers, as they can only be injected by the gateway within the private network perimeter.
 
@@ -133,7 +121,7 @@ When deploying the microservices stack to staging or production environments, im
 
 ---
 
-## Appendix: Booking Ticket Template Example
+## Appendix: Booking Ticket Template
 
 Upon processing a successful flight booking payment, the notification service sends the following HTML-formatted transactional ticket summary to the user's inbox:
 

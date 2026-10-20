@@ -96,3 +96,14 @@ export async function logoutAll(req: Request, res: Response, next: NextFunction)
     next(error);
   }
 }
+
+export async function assignRole(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { userId, roleName } = req.body;
+    const result = await AuthService.assignRoleToUser(Number(userId), roleName);
+
+    return res.status(StatusCodes.OK).json(SuccessResponse('Successfully assigned role to user', result));
+  } catch (error) {
+    next(error);
+  }
+}

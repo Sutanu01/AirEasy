@@ -74,7 +74,27 @@ router.delete("/airports/*",
 );
 
 // --- Customer / Booking routes (Automatically maps userId from token) ---
+router.get("/bookings", 
+  AuthMiddleware.isAuthenticated, 
+  AuthMiddleware.checkRole(['CUSTOMER', 'ADMIN']), 
+  bookingServiceProxy
+);
+router.get("/bookings/:id", 
+  AuthMiddleware.isAuthenticated, 
+  AuthMiddleware.checkRole(['CUSTOMER', 'ADMIN']), 
+  bookingServiceProxy
+);
+router.patch("/bookings/:id/cancel", 
+  AuthMiddleware.isAuthenticated, 
+  AuthMiddleware.checkRole(['CUSTOMER', 'ADMIN']), 
+  bookingServiceProxy
+);
 router.post("/bookings", 
+  AuthMiddleware.isAuthenticated, 
+  AuthMiddleware.checkRole(['CUSTOMER', 'ADMIN']), 
+  bookingServiceProxy
+);
+router.post("/bookings/orders", 
   AuthMiddleware.isAuthenticated, 
   AuthMiddleware.checkRole(['CUSTOMER', 'ADMIN']), 
   bookingServiceProxy

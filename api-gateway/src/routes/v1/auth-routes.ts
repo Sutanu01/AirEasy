@@ -30,5 +30,10 @@ router.post('/logout-all',
   AuthController.logoutAll
 );
 
+router.post('/assign-role',
+  AuthMiddleware.isAuthenticated,
+  AuthMiddleware.checkRole(['ADMIN']),
+  AuthController.assignRole
+);
 
 export default router;

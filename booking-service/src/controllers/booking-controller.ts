@@ -25,7 +25,7 @@ async function createBooking(req: Request, res: Response, next: NextFunction) {
 
 async function makePayment(req: Request, res: Response, next: NextFunction) {
   try {
-    const { bookingId } = req.body;
+    const { bookingId, razorpayPaymentId, razorpaySignature } = req.body;
     const idempotencyKey = req.headers['x-idempotency-key'];
     const userEmail = req.headers['x-user-email'] as string | undefined;
 
@@ -33,11 +33,92 @@ async function makePayment(req: Request, res: Response, next: NextFunction) {
       throw new AppError('Idempotency key header is required', StatusCodes.BAD_REQUEST);
     }
 
-    const result = await BookingService.makePayment(Number(bookingId), idempotencyKey, userEmail);
+    const result = await BookingService.makePayment({
+      bookingId: Number(bookingId),
+      idempotencyKey,
+      recipientEmail: userEmail,
+      razorpayPaymentId,
+      razorpaySignature,
+    });
 
     return res
       .status(result.status)
       .json(SuccessResponse(result.data.message, result.data.booking));
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function createPaymentOrder(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { bookingId } = req.body;
+    const userIdHeader = req.headers['x-user-id'];
+    const userId = userIdHeader ? Number(userIdHeader) : (req.body.userId ? Number(req.body.userId) : undefined);
+
+    const result = await BookingService.createPaymentOrder(Number(bookingId), userId);
+
+    return res
+      .status(StatusCodes.OK)
+      .json(SuccessResponse('Successfully created Razorpay payment order', result));
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getUserBookings(req: Request, res: Response, next: NextFunction) {
+  try {
+    const userIdHeader = req.headers['x-user-id'];
+    const userId = userIdHeader ? Number(userIdHeader) : (req.query.userId ? Number(req.query.userId) : undefined);
+
+    if (!userId || Number.isNaN(userId)) {
+      throw new AppError('User authentication required to fetch bookings', StatusCodes.UNAUTHORIZED);
+    }
+
+    const bookings = await BookingService.getUserBookings(userId);
+
+    return res
+      .status(StatusCodes.OK)
+      .json(SuccessResponse('Successfully fetched user bookings', bookings));
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function getBookingById(req: Request, res: Response, next: NextFunction) {
+  try {
+    const bookingId = Number(req.params.id);
+    const userIdHeader = req.headers['x-user-id'];
+    const userId = userIdHeader ? Number(userIdHeader) : undefined;
+
+    if (Number.isNaN(bookingId)) {
+      throw new AppError('Invalid booking ID provided', StatusCodes.BAD_REQUEST);
+    }
+
+    const booking = await BookingService.getBookingById(bookingId, userId);
+
+    return res
+      .status(StatusCodes.OK)
+      .json(SuccessResponse('Successfully fetched booking details', booking));
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function cancelBooking(req: Request, res: Response, next: NextFunction) {
+  try {
+    const bookingId = Number(req.params.id);
+    const userIdHeader = req.headers['x-user-id'];
+    const userId = userIdHeader ? Number(userIdHeader) : undefined;
+
+    if (Number.isNaN(bookingId)) {
+      throw new AppError('Invalid booking ID provided', StatusCodes.BAD_REQUEST);
+    }
+
+    const booking = await BookingService.cancelBooking(bookingId, userId);
+
+    return res
+      .status(StatusCodes.OK)
+      .json(SuccessResponse('Successfully cancelled the booking', booking));
   } catch (error) {
     next(error);
   }
@@ -61,6 +142,10 @@ async function getFlightSeatsMap(req: Request, res: Response, next: NextFunction
 
 export {
   createBooking,
+  createPaymentOrder,
   makePayment,
+  getUserBookings,
+  getBookingById,
+  cancelBooking,
   getFlightSeatsMap,
 };
