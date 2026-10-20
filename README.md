@@ -4,7 +4,9 @@ A flight booking and transaction processing system built on a  microservices arc
 
 The backend leverages an API Gateway for request routing and stateless security enforcement, uses RabbitMQ for asynchronous event-driven task processing, and integrates with the Resend API for transactional email dispatching. The frontend provides an intuitive booking experience with live seat selection and Razorpay payment integration.
 
-<img src="assets/landing.png" alt="AirEasy Landing Page" width="100%" />
+![AirEasy Landing Page](./assets/landing.png)
+
+![AirEasy Flight Search Results](./assets/search_results.png)
 
 ---
 
@@ -125,4 +127,4 @@ graph TD
 
 Upon processing a successful flight booking payment, the notification service sends the following HTML-formatted transactional ticket summary to the user's inbox:
 
-<img src="assets/booking-confirmation.png" alt="Booking Confirmation Email" width="450" />
+![Booking Confirmation Email](./assets/booking-confirmation.png)

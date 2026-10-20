@@ -22,20 +22,9 @@ const processQueue = (error: any, token: string | null = null) => {
 
 export const setAccessToken = (token: string | null) => {
   accessToken = token;
-  if (typeof window !== 'undefined') {
-    if (token) {
-      localStorage.setItem('aireasy_access_token', token);
-    } else {
-      localStorage.removeItem('aireasy_access_token');
-    }
-  }
 };
 
 export const getAccessToken = (): string | null => {
-  if (accessToken) return accessToken;
-  if (typeof window !== 'undefined') {
-    accessToken = localStorage.getItem('aireasy_access_token');
-  }
   return accessToken;
 };
 

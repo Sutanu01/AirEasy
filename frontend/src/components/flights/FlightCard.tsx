@@ -3,7 +3,6 @@
 import React from 'react';
 import { Flight } from '@/types';
 import { Card } from '@/components/ui/Card';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Plane, Clock, Armchair, ChevronRight } from 'lucide-react';
 
@@ -42,7 +41,7 @@ export function FlightCard({ flight, onSelect }: FlightCardProps) {
         borderLeft: isLowSeats ? '4px solid var(--color-warning)' : '4px solid var(--color-primary)',
       }}
     >
-      {/* Top Bar: Flight number, Airplane model, Gate */}
+      {/* Top Bar: Flight number, Airplane model */}
       <div
         style={{
           display: 'flex',
@@ -73,12 +72,6 @@ export function FlightCard({ flight, onSelect }: FlightCardProps) {
           <span style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: 500 }}>
             {flight.airplane?.modelNumber || 'Commercial Airliner'}
           </span>
-
-          {flight.boardingGate && (
-            <Badge variant="neutral" size="sm">
-              Gate {flight.boardingGate}
-            </Badge>
-          )}
         </div>
 
         {/* Available seats */}

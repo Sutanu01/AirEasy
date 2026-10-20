@@ -35,31 +35,29 @@ export default function AdminPortalPage() {
   const [activeTab, setActiveTab] = useState<AdminTab>('AIRPLANES');
   const [loading, setLoading] = useState(false);
 
-  // Data states
   const [airplanes, setAirplanes] = useState<Airplane[]>([]);
   const [flights, setFlights] = useState<Flight[]>([]);
   const [airports, setAirports] = useState<Airport[]>([]);
   const [cities, setCities] = useState<City[]>([]);
 
-  // Modals state
+  // Modals
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<AdminTab>('AIRPLANES');
 
-  // Form states
-  // 1. Airplane Form
+  //Airplane Form
   const [airplaneModel, setAirplaneModel] = useState('');
   const [airplaneCapacity, setAirplaneCapacity] = useState('180');
 
-  // 2. City Form
+  //City Form
   const [cityName, setCityName] = useState('');
 
-  // 3. Airport Form
+  //Airport Form
   const [airportName, setAirportName] = useState('');
   const [airportCode, setAirportCode] = useState('');
   const [airportAddress, setAirportAddress] = useState('');
   const [airportCityId, setAirportCityId] = useState('');
 
-  // 4. Flight Form
+  //Flight Form
   const [flightNumber, setFlightNumber] = useState('');
   const [flightAirplaneId, setFlightAirplaneId] = useState('');
   const [flightDepAirportId, setFlightDepAirportId] = useState('');
@@ -69,7 +67,7 @@ export default function AdminPortalPage() {
   const [flightPrice, setFlightPrice] = useState('');
   const [flightGate, setFlightGate] = useState('');
 
-  // 5. Role Form
+  // Role Form
   const [roleUserId, setRoleUserId] = useState('');
   const [roleName, setRoleName] = useState('ADMIN');
 

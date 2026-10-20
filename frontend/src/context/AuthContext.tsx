@@ -26,28 +26,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const initializeAuth = useCallback(async () => {
     try {
       const storedUser = localStorage.getItem('aireasy_user');
-      const token = getAccessToken();
-
+      let parsedUser: User | null = null;
       if (storedUser) {
-        setUser(JSON.parse(storedUser));
+        try {
+          parsedUser = JSON.parse(storedUser);
+          setUser(parsedUser);
+        } catch {
+          // ignore parse error
+        }
       }
 
-      // If we don't have an active token or we want to verify session validity
-      if (!token) {
-        try {
-          const refreshRes = await apiRequest<{ accessToken: string }>('/auth/refresh', {
-            method: 'POST',
-            skipAuth: true,
-          });
-          if (refreshRes.data?.accessToken) {
-            setAccessToken(refreshRes.data.accessToken);
+      // Request a fresh in-memory access token on startup using the httpOnly cookie
+      try {
+        const refreshRes = await apiRequest<{ accessToken: string }>('/auth/refresh', {
+          method: 'POST',
+          skipAuth: true,
+        });
+        if (refreshRes.data?.accessToken) {
+          const freshToken = refreshRes.data.accessToken;
+          setAccessToken(freshToken);
+
+          // Sync user & roles from the fresh token
+          try {
+            const payloadPart = freshToken.split('.')[1];
+            if (payloadPart) {
+              const decoded = JSON.parse(atob(payloadPart));
+              const updatedUser: User = {
+                id: decoded.userId ?? (parsedUser ? parsedUser.id : 0),
+                email: decoded.email ?? (parsedUser ? parsedUser.email : ''),
+                roles: (Array.isArray(decoded.roles) ? decoded.roles : parsedUser?.roles) || ['CUSTOMER'],
+              };
+              setUser(updatedUser);
+              localStorage.setItem('aireasy_user', JSON.stringify(updatedUser));
+            }
+          } catch (e) {
+            // Keep parsedUser if decode fails
           }
-        } catch (err) {
-          // No active session cookie
-          setUser(null);
-          localStorage.removeItem('aireasy_user');
-          setAccessToken(null);
         }
+      } catch (err) {
+        // No active session cookie or expired
+        setUser(null);
+        localStorage.removeItem('aireasy_user');
+        setAccessToken(null);
       }
     } catch (e) {
       console.error('Failed to initialize auth', e);
