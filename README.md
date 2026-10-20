@@ -6,6 +6,8 @@ The backend leverages an API Gateway for request routing and stateless security 
 
 ![AirEasy Landing Page](./assets/landing.png)
 
+<br />
+
 ![AirEasy Flight Search Results](./assets/search_results.png)
 
 ---
